@@ -1,5 +1,8 @@
 # -------------------------------
-# IKSolver Makefile for Windows + vcpkg SDL2
+###############################################################
+# IKSolver Makefile: Now cross-platform! (Windows, Linux, macOS)
+# Because everyone deserves a solver, even penguins and apples.
+###############################################################
 # -------------------------------
 
 # Targets
@@ -8,11 +11,21 @@ TARGET_DEMO    = demo.exe
 TARGET_EXAMPLE = basic_demo.exe
 TARGET_TEST    = test_solver.exe
 
-# Compiler
-CXX      = g++
-CXXFLAGS = -std=c++17 -O2 -Iinclude -IC:/Users/User/vcpkg/installed/x64-mingw-dynamic/include -Wall -Wextra -D_USE_MATH_DEFINES
-LDFLAGS  = -L. -LC:/Users/User/vcpkg/installed/x64-mingw-dynamic/lib
-LDLIBS   = -lmingw32 -lSDL2main -lSDL2 -mconsole
+ifeq ($(OS),Windows_NT)
+    # Windows settings (vcpkg SDL2)
+    CXX      = g++
+    CXXFLAGS = -std=c++17 -O2 -Iinclude -IC:/Users/User/vcpkg/installed/x64-mingw-dynamic/include -Wall -Wextra -D_USE_MATH_DEFINES
+    LDFLAGS  = -L. -LC:/Users/User/vcpkg/installed/x64-mingw-dynamic/lib
+    LDLIBS   = -lmingw32 -lSDL2main -lSDL2 -mconsole
+    RM       = -del /Q
+else
+    # Linux/macOS settings (assumes SDL2 installed system-wide)
+    CXX      = g++
+    CXXFLAGS = -std=c++17 -O2 -Iinclude -Wall -Wextra -D_USE_MATH_DEFINES
+    LDFLAGS  = -L.
+    LDLIBS   = -lSDL2
+    RM       = rm -f
+endif
 
 # Directories
 SRC_DIR      = src
@@ -71,6 +84,11 @@ $(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp
 # Clean
 # -------------------------------
 clean:
-	-del /Q $(SRC_DIR)\*.o $(TARGET_LIB) $(TARGET_DEMO) $(TARGET_EXAMPLE) $(TARGET_TEST) 2>nul || true
+	$(RM) $(SRC_DIR)/*.o $(TARGET_LIB) $(TARGET_DEMO) $(TARGET_EXAMPLE) $(TARGET_TEST)
+	# Cleaning up: because even solvers need a fresh start.
 
 .PHONY: all clean
+###############################################################
+# End of Makefile. If you made it this far, reward yourself.
+# Or run 'make' and watch the magic happen.
+###############################################################

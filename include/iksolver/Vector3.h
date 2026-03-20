@@ -1,7 +1,9 @@
+
 #pragma once
 #include <cmath>
 #include <iostream>
 #include <algorithm>
+#include "iksolver/MathUtils.h"
 
 namespace ik {
 
@@ -33,7 +35,7 @@ struct Vector3 {
     double lengthSquared() const { return x * x + y * y + z * z; }
     Vector3 normalized() const {
         double len = length();
-        return (len > EPSILON) ? Vector3(x / len, y / len, z / len) : Vector3(0, 0, 0);
+        return (len > ik::EPSILON) ? Vector3(x / len, y / len, z / len) : Vector3(0, 0, 0);
     }
 
     // Dot & cross
@@ -47,7 +49,7 @@ struct Vector3 {
     // Angle operations
     double angleTo(const Vector3& other) const {
         double cosTheta = this->dot(other) / (this->length() * other.length());
-        return std::acos(clamp(cosTheta, -1.0, 1.0));
+        return std::acos(ik::clamp<double>(cosTheta, -1.0, 1.0));
     }
     
     // Reflection
@@ -67,16 +69,16 @@ struct Vector3 {
     
     // Vectors are approximately equal
     bool isApproximatelyEqual(const Vector3& other, double epsilon = EPSILON) const {
-        return isApproximatelyEqual(x, other.x, epsilon) &&
-               isApproximatelyEqual(y, other.y, epsilon) &&
-               isApproximatelyEqual(z, other.z, epsilon);
+         return ik::isApproximatelyEqual<double>(x, other.x, epsilon) &&
+             ik::isApproximatelyEqual<double>(y, other.y, epsilon) &&
+             ik::isApproximatelyEqual<double>(z, other.z, epsilon);
     }
 
     // Clamp components
     Vector3 clamp(double minVal, double maxVal) const {
-        return {clamp(x, minVal, maxVal),
-                clamp(y, minVal, maxVal),
-                clamp(z, minVal, maxVal)};
+        return {ik::clamp<double>(x, minVal, maxVal),
+            ik::clamp<double>(y, minVal, maxVal),
+            ik::clamp<double>(z, minVal, maxVal)};
     }
 
     // project onto another vector

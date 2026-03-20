@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <algorithm>
+#include "MathUtils.h"
 
 namespace ik {
 
@@ -34,7 +35,7 @@ struct Vector2 {
     double lengthSquared() const { return x * x + y * y; }
     Vector2 normalized() const {
         double len = length();
-        return (len > EPSILON) ? Vector2(x / len, y / len) : Vector2(0, 0);
+        return (len > ik::EPSILON) ? Vector2(x / len, y / len) : Vector2(0, 0);
     }
 
     // Dot & cross
@@ -73,13 +74,13 @@ struct Vector2 {
     }
     
     // Vectors are approximately equal
-    bool isApproximatelyEqual(const Vector2& other, double epsilon = EPSILON) const {
-        return isApproximatelyEqual(x, other.x, epsilon) && isApproximatelyEqual(y, other.y, epsilon);
+    bool isApproximatelyEqual(const Vector2& other, double epsilon = ik::EPSILON) const {
+        return ik::isApproximatelyEqual(x, other.x, epsilon) && ik::isApproximatelyEqual(y, other.y, epsilon);
     }
     
     // Clamp components
     Vector2 clamp(double minVal, double maxVal) const {
-        return {clamp(x, minVal, maxVal), clamp(y, minVal, maxVal)};
+        return {ik::clamp(x, minVal, maxVal), ik::clamp(y, minVal, maxVal)};
     }
 
     // debug
