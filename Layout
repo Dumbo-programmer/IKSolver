@@ -1,0 +1,24 @@
+IKSolver/
+ ├── CMakeLists.txt             # Build configuration (library + demo)
+ ├── include/
+ │    └── iksolver/             # Public headers (API of your library)
+ │         ├── Vector2.h        # 2D vector math utilities
+ │         ├── Vector3.h        # 3D vector math utilities
+ │         ├── IKChain2D.h      # Definition of a 2D kinematic chain
+ │         ├── IKChain3D.h      # Definition of a 3D kinematic chain
+ │         ├── CCDSolver.h      # Cyclic Coordinate Descent solver (2D/3D)
+ │         └── FABRIKSolver.h   # FABRIK solver (2D/3D)
+ ├── src/
+ │    ├── Vector2.cpp           # Implementation of 2D vector math
+ │    ├── Vector3.cpp           # Implementation of 3D vector math
+ │    ├── IKChain2D.cpp         # Methods for managing 2D chains
+ │    ├── IKChain3D.cpp         # Methods for managing 3D chains
+ │    ├── CCDSolver.cpp         # CCD algorithm implementation
+ │    ├── FABRIKSolver.cpp      # FABRIK algorithm implementation
+ │    └── maindemo.cpp         # SDL2 demo for testing & visualization
+ ├── examples/
+ │    └── basic_demo.cpp        # Minimal text-based demo (no SDL)
+ ├── tests/
+ │    └── test_solver.cpp       # Unit tests (can be Catch2 / GoogleTest)
+ └── docs/
+      └── design.md             # Notes, math background, design decisions
