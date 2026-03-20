@@ -1,4 +1,5 @@
 # 🦾 IK Solver Library
+# ![IKSolver Demo](images/image.png)
 
 Welcome to the comprehensive technical guide for the enhanced IK (Inverse Kinematics) Solver library! This is a C++17 library designed for solving 2D and 3D inverse kinematics problems with multiple algorithms, constraint systems, and mathematical utilities.
 
