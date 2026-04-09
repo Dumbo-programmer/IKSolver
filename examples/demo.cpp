@@ -16,6 +16,9 @@ void DrawLine(SDL_Renderer* renderer, const Vector2& a, const Vector2& b) {
 }
 
 int SDL_main(int argc, char* argv[]) {
+    (void)argc;
+    (void)argv;
+
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "SDL_Init Error: " << SDL_GetError() << "\n";
         return 1;

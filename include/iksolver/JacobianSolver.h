@@ -42,8 +42,8 @@ public:
      * @param target The target position for the end effector.
      * @param settings Solver settings.
      * @return JacobianResult error code (see enum above).
-     * @throws std::invalid_argument if input is invalid. (Don't feed the solver junk!)
-     * @note If you get JACOBIAN_UNREACHABLE_TARGET, try moving the target closer. Or buy longer bones.
+     * @note Returns JACOBIAN_INVALID_INPUT for invalid chain or solver settings.
+     * @note Returns JACOBIAN_UNREACHABLE_TARGET when the target is beyond the chain reach.
      */
     static JacobianResult Solve(IKChain2D& chain, const Vector2& target, const SolverSettings& settings);
 

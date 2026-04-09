@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <cassert>
+#include <cmath>
 #include "../include/iksolver/IKChain2D.h"
 #include "../include/iksolver/IKChain3D.h"
 #include "../include/iksolver/CCDSolver.h"
@@ -107,12 +108,13 @@ void testCCDSolver2D() {
     IKChain2D chain(joints);
     Vector2 target(1.5, 0.5);
     
-    bool solved = CCDSolver::Solve(chain, target, 1e-3f, 10);
-    if (solved) {
+    CCDResult result = CCDSolver::Solve(chain, target, 1e-3f, 10);
+    if (result == CCD_SUCCESS) {
         Vector2 endEffector = chain.getEndEffector();
         assert((endEffector - target).length() < 1e-2);
         std::cout << "CCD 2D: Target reached at " << endEffector << "\n";
     } else {
+        assert(result == CCD_MAX_ITERATIONS_EXCEEDED);
         std::cout << "CCD 2D: Target not reached within iterations\n";
     }
     
@@ -131,12 +133,13 @@ void testFABRIKSolver2D() {
     IKChain2D chain(joints);
     Vector2 target(1.5, 0.5);
     
-    bool solved = FABRIKSolver::Solve(chain, target, 1e-3f, 10);
-    if (solved) {
+    FABRIKResult result = FABRIKSolver::Solve(chain, target, 1e-3f, 10);
+    if (result == FABRIK_SUCCESS) {
         Vector2 endEffector = chain.getEndEffector();
         assert((endEffector - target).length() < 1e-2);
         std::cout << "FABRIK 2D: Target reached at " << endEffector << "\n";
     } else {
+        assert(result == FABRIK_MAX_ITERATIONS_EXCEEDED);
         std::cout << "FABRIK 2D: Target not reached within iterations\n";
     }
     
@@ -159,11 +162,12 @@ void testJacobianSolver() {
     settings.maxIterations = 20;
     settings.tolerance = 1e-3f;
     
-    bool solved = JacobianSolver::Solve(chain, target, settings);
-    if (solved) {
+    JacobianResult result = JacobianSolver::Solve(chain, target, settings);
+    if (result == JACOBIAN_SUCCESS) {
         Vector2 endEffector = chain.getEndEffector();
         std::cout << "Jacobian: Target reached at " << endEffector << "\n";
     } else {
+        assert(result == JACOBIAN_MAX_ITERATIONS_EXCEEDED);
         std::cout << "Jacobian: Target not reached within iterations\n";
     }
     
@@ -187,7 +191,36 @@ void testMathUtils() {
     std::cout << "Math utility tests passed!\n";
 }
 
+void test3DSolversSmoke() {
+    std::cout << "Testing 3D solver smoke paths...\n";
+
+    std::vector<Vector3> joints = {
+        Vector3(0, 0, 0),
+        Vector3(0, 0, 1),
+        Vector3(0, 0, 2)
+    };
+
+    IKChain3D ccdChain(joints);
+    CCDSolver3D::SolverSettings ccdSettings;
+    ccdSettings.maxIterations = 25;
+    ccdSettings.tolerance = 1e-3f;
+    (void)CCDSolver3D::Solve(ccdChain, Vector3(0.2, 0.4, 1.7), ccdSettings);
+    assert(ccdChain.isValid());
+
+    IKChain3D fabrikChain(joints);
+    FABRIKSolver3D::SolverSettings fabrikSettings;
+    fabrikSettings.maxIterations = 25;
+    fabrikSettings.tolerance = 1e-3f;
+    (void)FABRIKSolver3D::Solve(fabrikChain, Vector3(0.2, 0.4, 1.7), fabrikSettings);
+    assert(fabrikChain.isValid());
+
+    std::cout << "3D solver smoke tests passed!\n";
+}
+
 int main(int argc, char** argv) {
+    (void)argc;
+    (void)argv;
+
     std::cout << "=== Enhanced IK Solver Library Tests ===\n\n";
     
     try {
@@ -199,6 +232,7 @@ int main(int argc, char** argv) {
         testCCDSolver2D();
         testFABRIKSolver2D();
         testJacobianSolver();
+        test3DSolversSmoke();
         testMathUtils();
 
         // Edge case: unreachable target for CCD
@@ -206,8 +240,8 @@ int main(int argc, char** argv) {
         std::vector<Vector2> unreachableJoints = { Vector2(0, 0), Vector2(1, 0), Vector2(2, 0) };
         IKChain2D unreachableChain(unreachableJoints);
         Vector2 unreachableTarget(100, 100);
-        bool solvedUnreachable = CCDSolver::Solve(unreachableChain, unreachableTarget, 1e-3f, 10);
-        assert(!solvedUnreachable);
+        CCDResult unreachableResult = CCDSolver::Solve(unreachableChain, unreachableTarget, 1e-3f, 10);
+        assert(unreachableResult == CCD_UNREACHABLE_TARGET);
         std::cout << "CCD 2D: Unreachable target test passed!\n";
 
         // Edge case: zero-length bone for FABRIK
@@ -215,8 +249,8 @@ int main(int argc, char** argv) {
         std::vector<Vector2> zeroLengthJoints = { Vector2(0, 0), Vector2(0, 0), Vector2(0, 0) };
         IKChain2D zeroLengthChain(zeroLengthJoints);
         Vector2 zeroLengthTarget(1, 1);
-        bool solvedZeroLength = FABRIKSolver::Solve(zeroLengthChain, zeroLengthTarget, 1e-3f, 10);
-        assert(!solvedZeroLength);
+        FABRIKResult zeroLengthResult = FABRIKSolver::Solve(zeroLengthChain, zeroLengthTarget, 1e-3f, 10);
+        assert(zeroLengthResult == FABRIK_UNREACHABLE_TARGET);
         std::cout << "FABRIK 2D: Zero-length bone test passed!\n";
 
         // Failure scenario: single-joint chain for Jacobian
@@ -224,8 +258,8 @@ int main(int argc, char** argv) {
         std::vector<Vector2> singleJoint = { Vector2(0, 0) };
         IKChain2D singleJointChain(singleJoint);
         JacobianSolver::SolverSettings settings;
-        bool solvedSingleJoint = JacobianSolver::Solve(singleJointChain, Vector2(1, 1), settings);
-        assert(!solvedSingleJoint);
+        JacobianResult singleJointResult = JacobianSolver::Solve(singleJointChain, Vector2(1, 1), settings);
+        assert(singleJointResult == JACOBIAN_INVALID_INPUT);
         std::cout << "Jacobian: Single-joint chain test passed!\n";
 
         // Performance test: large chain for CCD
@@ -234,8 +268,8 @@ int main(int argc, char** argv) {
         for (int i = 0; i < 100; ++i) largeChainJoints.push_back(Vector2(i, 0));
         IKChain2D largeChain(largeChainJoints);
         Vector2 largeTarget(50, 50);
-        bool solvedLarge = CCDSolver::Solve(largeChain, largeTarget, 1e-2f, 100);
-        std::cout << "CCD 2D: Large chain test completed, solved=" << solvedLarge << "\n";
+        CCDResult largeResult = CCDSolver::Solve(largeChain, largeTarget, 1e-2f, 100);
+        std::cout << "CCD 2D: Large chain test completed, result=" << largeResult << "\n";
 
         std::cout << "\n=== All tests completed successfully! ===\n";
     } catch (const std::exception& e) {

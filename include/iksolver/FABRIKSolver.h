@@ -29,8 +29,8 @@ public:
      * @param tolerance Acceptable distance to target.
      * @param maxIterations Maximum number of iterations.
      * @return FABRIKResult error code (see enum above).
-     * @throws std::invalid_argument if input is invalid. (Don't feed the solver junk!)
-     * @note If you get FABRIK_UNREACHABLE_TARGET, try moving the target closer. Or buy longer bones.
+     * @note Returns FABRIK_INVALID_INPUT for invalid chain or solver settings.
+     * @note Returns FABRIK_UNREACHABLE_TARGET when the target is beyond the chain reach.
      */
     static FABRIKResult Solve(IKChain2D& chain, const Vector2& target, float tolerance = 1e-2f, int maxIterations = 50);
 };

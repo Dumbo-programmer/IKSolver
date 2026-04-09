@@ -48,7 +48,11 @@ struct Vector3 {
 
     // Angle operations
     double angleTo(const Vector3& other) const {
-        double cosTheta = this->dot(other) / (this->length() * other.length());
+        const double denom = this->length() * other.length();
+        if (denom <= ik::EPSILON) {
+            return 0.0;
+        }
+        double cosTheta = this->dot(other) / denom;
         return std::acos(ik::clamp<double>(cosTheta, -1.0, 1.0));
     }
     
@@ -83,7 +87,11 @@ struct Vector3 {
 
     // project onto another vector
     Vector3 projectOnto(const Vector3& other) const {
-        return other * (this->dot(other) / other.lengthSquared());
+        const double lenSq = other.lengthSquared();
+        if (lenSq <= ik::EPSILON) {
+            return Vector3(0.0, 0.0, 0.0);
+        }
+        return other * (this->dot(other) / lenSq);
     }
 
     // debug

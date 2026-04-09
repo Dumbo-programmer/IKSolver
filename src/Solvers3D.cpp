@@ -31,29 +31,31 @@ double CCDSolver3D::performCCDStep(IKChain3D& chain, const Vector3& target, cons
         // compute rotation axis and angle
         Vector3 rotationAxis = computeRotationAxis(toEnd, toTarget);
         double rotationAngle = computeRotationAngle(toEnd, toTarget);
+        if (rotationAxis.lengthSquared() <= EPSILON || std::abs(rotationAngle) <= EPSILON) {
+            continue;
+        }
         
         // Limit the rotation angle
         if (std::abs(rotationAngle) > settings.maxAngleChange) {
             rotationAngle = (rotationAngle > 0) ? settings.maxAngleChange : -settings.maxAngleChange;
         }
+
+        double currentAngle = chain.getJointAngle(i);
+        double newAngle = currentAngle + rotationAngle;
         
         // apply constraints if enabled
         if (settings.respectConstraints) {
             auto& joint = chain.getJoints()[i];
             if (joint.constraint.enabled) {
-                double currentAngle = chain.getJointAngle(i);
-                double newAngle = currentAngle + rotationAngle;
                 newAngle = joint.constraint.applyConstraint(newAngle);
-                rotationAngle = newAngle - currentAngle;
             }
         }
         
         // apply rotation to all joints after this one
-        if (std::abs(rotationAngle) > EPSILON) {
-            chain.setJointAngle(i, chain.getJointAngle(i) + rotationAngle);
-            chain.updateForwardKinematics();
-            endEffector = chain.getEndEffector();
-        }
+        chain.setJointRotationAxis(i, rotationAxis);
+        chain.setJointAngle(i, newAngle);
+        chain.updateForwardKinematics();
+        endEffector = chain.getEndEffector();
     }
     
     return (endEffector - target).length();
@@ -88,11 +90,11 @@ bool FABRIKSolver3D::Solve(IKChain3D& chain, const Vector3& target, const Solver
         // stretch towards target
         Vector3 direction = (target - basePosition).normalized();
         Vector3 currentPos = basePosition;
+        auto& joints = chain.getJoints();
         
         for (size_t i = 0; i < chain.size() - 1; ++i) {
-            auto& joints = chain.getJoints();
             currentPos += direction * joints[i].length;
-            chain.setJointPosition(static_cast<int>(i + 1), currentPos);
+            joints[i + 1].position = currentPos;
         }
         return false;
     }
@@ -118,17 +120,17 @@ void FABRIKSolver3D::backwardReach(IKChain3D& chain, const Vector3& target) {
     auto& joints = chain.getJoints();
     
     // set end effector to target
-    chain.setJointPosition(static_cast<int>(joints.size() - 1), target);
+    joints.back().position = target;
     
     // work backwards
     for (int i = static_cast<int>(joints.size()) - 2; i >= 0; --i) {
-        Vector3 currentPos = chain.getJointPosition(i);
-        Vector3 nextPos = chain.getJointPosition(i + 1);
+        Vector3 currentPos = joints[i].position;
+        Vector3 nextPos = joints[i + 1].position;
         
         Vector3 direction = (currentPos - nextPos).normalized();
         Vector3 newPos = nextPos + direction * joints[i].length;
         
-        chain.setJointPosition(i, newPos);
+        joints[i].position = newPos;
     }
 }
 
@@ -136,17 +138,17 @@ void FABRIKSolver3D::forwardReach(IKChain3D& chain, const Vector3& basePosition)
     auto& joints = chain.getJoints();
     
     // set base to original position
-    chain.setJointPosition(0, basePosition);
+    joints[0].position = basePosition;
     
     // work forwards
     for (size_t i = 0; i < joints.size() - 1; ++i) {
-        Vector3 currentPos = chain.getJointPosition(static_cast<int>(i));
-        Vector3 nextPos = chain.getJointPosition(static_cast<int>(i + 1));
+        Vector3 currentPos = joints[i].position;
+        Vector3 nextPos = joints[i + 1].position;
         
         Vector3 direction = (nextPos - currentPos).normalized();
         Vector3 newPos = currentPos + direction * joints[i].length;
         
-        chain.setJointPosition(static_cast<int>(i + 1), newPos);
+        joints[i + 1].position = newPos;
     }
 }
 

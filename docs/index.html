@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IKSolver | Inverse Kinematics Library</title>
+  <meta name="description" content="IKSolver is a C++17 inverse kinematics library with 2D and 3D solvers, constraints, demos, and tests." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-orb orb-a" aria-hidden="true"></div>
+  <div class="bg-orb orb-b" aria-hidden="true"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="#top">IKSolver</a>
+      <nav class="site-nav">
+        <a href="#playground">Playground</a>
+        <a href="#quickstart">Quick Start</a>
+        <a href="#architecture">Architecture</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero container reveal">
+      <p class="eyebrow">C++17 Inverse Kinematics Toolkit</p>
+      <h1>Practical IK Solvers for 2D and 3D Chains</h1>
+      <p class="lead">
+        IKSolver combines CCD, FABRIK, and Jacobian methods with constraints,
+        vector utilities, demos, and tests so you can prototype robotic motion fast.
+      </p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#playground">Try Web Playground</a>
+        <a class="btn ghost" href="../ReadMe.md">Read Repository Docs</a>
+      </div>
+      <ul class="stats">
+        <li><span>2D Solvers</span><strong>3</strong></li>
+        <li><span>3D Solvers</span><strong>2</strong></li>
+        <li><span>Language</span><strong>C++17</strong></li>
+        <li><span>Build</span><strong>make</strong></li>
+      </ul>
+    </section>
+
+    <section id="playground" class="container panel reveal">
+      <div class="panel-head">
+        <div>
+          <h2>Interactive IK Playground</h2>
+          <p>Move the cursor (or touch) to reposition the target and compare CCD vs FABRIK behavior.</p>
+        </div>
+        <div class="algo-switch" role="group" aria-label="Algorithm selector">
+          <button class="algo-btn active" data-algo="ccd" type="button">CCD</button>
+          <button class="algo-btn" data-algo="fabrik" type="button">FABRIK</button>
+        </div>
+      </div>
+      <canvas id="ik-canvas" width="960" height="520" aria-label="IK playground canvas"></canvas>
+      <div class="legend">
+        <span><i class="swatch link"></i>Chain Links</span>
+        <span><i class="swatch joint"></i>Joints</span>
+        <span><i class="swatch target"></i>Target</span>
+      </div>
+    </section>
+
+    <section id="quickstart" class="container two-col reveal">
+      <article class="card">
+        <h3>Build And Test</h3>
+        <pre><code>make clean
+make -B
+make run-tests</code></pre>
+        <p>SDL2 is only required for demo executables. Core library and tests do not require rendering.</p>
+      </article>
+      <article class="card">
+        <h3>Minimal Usage</h3>
+        <pre><code>IKChain2D chain({{0,0},{1,0},{2,0}});
+Vector2 target(1.5, 0.5);
+CCDResult r = CCDSolver::Solve(chain, target);
+if (r == CCD_SUCCESS) {
+  // use end effector
+}</code></pre>
+        <p>Use explicit comparisons with result enums for robust control flow.</p>
+      </article>
+    </section>
+
+    <section id="architecture" class="container reveal">
+      <h2>System Structure</h2>
+      <div class="architecture-grid">
+        <article class="card">
+          <h3>Math Layer</h3>
+          <p>Vector2, Vector3, and MathUtils provide low-level geometry, numeric safety, and utility helpers.</p>
+        </article>
+        <article class="card">
+          <h3>Chain Layer</h3>
+          <p>IKChain2D and IKChain3D own positional state, lengths, constraints, and forward kinematics.</p>
+        </article>
+        <article class="card">
+          <h3>Solver Layer</h3>
+          <p>CCD, FABRIK, and Jacobian mutate chain state in place and return explicit outcome codes.</p>
+        </article>
+      </div>
+      <p class="muted">
+        See <a href="../README_TECHNICAL.md">README_TECHNICAL.md</a> for implementation details and extension guidance.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer container">
+    <p>IKSolver documentation site. Updated <span id="year"></span>.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

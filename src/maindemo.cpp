@@ -126,6 +126,8 @@ struct Camera2D {
 
 int SDL_main(int argc, char** argv)
 {
+    (void)argc;
+    (void)argv;
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0){
         std::fprintf(stderr, "SDL_Init error: %s\n", SDL_GetError());

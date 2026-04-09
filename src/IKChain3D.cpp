@@ -3,13 +3,35 @@
 
 namespace ik {
 
+namespace {
+
+Vector3 rotateAroundAxis(const Vector3& v, const Vector3& axis, double angle) {
+    if (std::abs(angle) <= EPSILON || axis.lengthSquared() <= EPSILON) {
+        return v;
+    }
+
+    Vector3 k = axis.normalized();
+    const double c = std::cos(angle);
+    const double s = std::sin(angle);
+    return v * c + k.cross(v) * s + k * (k.dot(v) * (1.0 - c));
+}
+
+} // namespace
+
 IKChain3D::IKChain3D(const Vector3& root, int numJoints, double segmentLength) 
     : basePosition(root) {
+    if (numJoints <= 0) {
+        return;
+    }
+
     joints.reserve(numJoints);
     Vector3 pos = root;
     for (int i = 0; i < numJoints; i++) {
-        joints.emplace_back(pos, segmentLength);
-        pos.z += segmentLength; // default orientation along +Z
+        const double length = (i < numJoints - 1) ? segmentLength : 0.0;
+        joints.emplace_back(pos, length);
+        if (i < numJoints - 1) {
+            pos.z += segmentLength; // default orientation along +Z
+        }
     }
 }
 
@@ -65,7 +87,7 @@ void IKChain3D::setJointPosition(int index, const Vector3& pos) {
 }
 
 void IKChain3D::setJointAngle(int index, double angle) {
-    if (index < 0 || index >= static_cast<int>(joints.size()))
+    if (index < 0 || index >= static_cast<int>(joints.size()) - 1)
         return;
         
     // Apply constraints if enabled
@@ -85,6 +107,11 @@ double IKChain3D::getJointAngle(int index) const {
 void IKChain3D::setJointRotationAxis(int index, const Vector3& axis) {
     if (index < 0 || index >= static_cast<int>(joints.size()))
         return;
+
+    if (axis.lengthSquared() <= EPSILON) {
+        return;
+    }
+
     joints[index].rotationAxis = axis.normalized();
 }
 
@@ -104,10 +131,19 @@ void IKChain3D::updateForwardKinematics() {
     if (joints.empty()) return;
     
     joints[0].position = basePosition;
+    Vector3 direction(0.0, 0.0, 1.0);
     
     for (size_t i = 0; i < joints.size() - 1; ++i) {
-        // Simplified FK - just move along current direction
-        Vector3 direction = joints[i].rotationAxis;
+        Vector3 axis = joints[i].rotationAxis;
+        if (axis.lengthSquared() <= EPSILON) {
+            axis = Vector3(0.0, 0.0, 1.0);
+        }
+
+        direction = rotateAroundAxis(direction, axis, joints[i].angle).normalized();
+        if (direction.lengthSquared() <= EPSILON) {
+            direction = Vector3(0.0, 0.0, 1.0);
+        }
+
         joints[i + 1].position = joints[i].position + direction * joints[i].length;
     }
 }
