@@ -1,17 +1,22 @@
 TARGET_LIB = libiksolver.a
+.RECIPEPREFIX := >
 
 ifeq ($(OS),Windows_NT)
 EXE_EXT ?= .exe
 SDL_CFLAGS ?= -IC:/Users/User/vcpkg/installed/x64-mingw-dynamic/include
 SDL_LIBS ?= -LC:/Users/User/vcpkg/installed/x64-mingw-dynamic/lib -lmingw32 -lSDL2main -lSDL2 -mconsole
-RM := del /Q /F
-OBJ_CLEAN_PATTERN := src\*.o
+RM_FILES := del /Q /F
+MKDIR_OBJ = if not exist "$(OBJ_DIR)" mkdir "$(OBJ_DIR)"
+RMDIR_OBJ = if exist "$(OBJ_DIR)" rmdir /S /Q "$(OBJ_DIR)"
+LEGACY_OBJ_GLOB := src\*.o
 else
 EXE_EXT ?=
 SDL_CFLAGS ?= $(shell pkg-config --cflags sdl2 2>/dev/null)
 SDL_LIBS ?= $(shell pkg-config --libs sdl2 2>/dev/null)
-RM := rm -f
-OBJ_CLEAN_PATTERN := $(OBJ_FILES)
+RM_FILES := rm -f
+MKDIR_OBJ = mkdir -p $(OBJ_DIR)
+RMDIR_OBJ = rm -rf $(OBJ_DIR)
+LEGACY_OBJ_GLOB := src/*.o
 endif
 
 TARGET_DEMO = demo$(EXE_EXT)
@@ -26,6 +31,7 @@ LDFLAGS ?= -L.
 SRC_DIR = src
 EXAMPLES_DIR = examples
 TESTS_DIR = tests
+OBJ_DIR = build/obj
 
 SRC_FILES = \
     $(SRC_DIR)/Vector2.cpp \
@@ -38,7 +44,7 @@ SRC_FILES = \
     $(SRC_DIR)/Solvers3D.cpp \
     $(SRC_DIR)/JointConstraints.cpp
 
-OBJ_FILES = $(SRC_FILES:.cpp=.o)
+OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC_FILES))
 
 all: $(TARGET_LIB) $(TARGET_TEST) $(TARGET_DEMO) $(TARGET_EXAMPLE)
 
@@ -49,24 +55,27 @@ demos: $(TARGET_DEMO) $(TARGET_EXAMPLE)
 test: $(TARGET_TEST)
 
 run-tests: $(TARGET_TEST)
-	./$(TARGET_TEST)
+>./$(TARGET_TEST)
 
 $(TARGET_LIB): $(OBJ_FILES)
-	ar rcs $@ $^
+>ar rcs $@ $^
 
 $(TARGET_DEMO): $(SRC_DIR)/maindemo.cpp $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $< $(LDFLAGS) -liksolver $(SDL_LIBS) -o $@
+>$(CXX) $(CXXFLAGS) $< $(LDFLAGS) -liksolver $(SDL_LIBS) -o $@
 
 $(TARGET_EXAMPLE): $(EXAMPLES_DIR)/demo.cpp $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $< $(LDFLAGS) -liksolver $(SDL_LIBS) -o $@
+>$(CXX) $(CXXFLAGS) $< $(LDFLAGS) -liksolver $(SDL_LIBS) -o $@
 
 $(TARGET_TEST): $(TESTS_DIR)/test_solver.cpp $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $< $(LDFLAGS) -liksolver -o $@
+>$(CXX) $(CXXFLAGS) $< $(LDFLAGS) -liksolver -o $@
 
-$(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+>@$(MKDIR_OBJ)
+>$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	-$(RM) $(OBJ_CLEAN_PATTERN) $(TARGET_LIB) $(TARGET_DEMO) $(TARGET_EXAMPLE) $(TARGET_TEST)
+>-$(RM_FILES) $(TARGET_LIB) $(TARGET_DEMO) $(TARGET_EXAMPLE) $(TARGET_TEST)
+>-$(RM_FILES) $(LEGACY_OBJ_GLOB)
+>-$(RMDIR_OBJ)
 
 .PHONY: all lib demos test run-tests clean
